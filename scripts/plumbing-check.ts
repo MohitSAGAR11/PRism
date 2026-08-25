@@ -18,6 +18,7 @@ import { createOctokit, parsePullRef } from "../src/github/client.js";
 import { getPullRequest, listChangedFiles } from "../src/github/pr.js";
 import { buildReviewSystemPrompt, buildReviewUserPrompt } from "../src/review/prompt.js";
 import { estimateTokens, inputBudget } from "../src/util/tokens.js";
+import { loadEnvFile } from "../src/util/env.js";
 
 function githubToken(): string {
   const fromEnv = process.env["GITHUB_TOKEN"] ?? process.env["GH_TOKEN"];
@@ -26,6 +27,7 @@ function githubToken(): string {
 }
 
 async function main(): Promise<void> {
+  loadEnvFile();
   const args = process.argv.slice(2);
   const ref = args.find((a) => !a.startsWith("-"));
   const showPrompt = args.includes("--show-prompt");

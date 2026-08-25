@@ -5,6 +5,7 @@ import { createOctokit, parsePullRef } from "./github/client.js";
 import { createClient, formatUsage } from "./llm/client.js";
 import { renderForTerminal } from "./review/render.js";
 import { run } from "./review/run.js";
+import { loadEnvFile } from "./util/env.js";
 
 const USAGE = `ai-pr-reviewer - review a GitHub pull request
 
@@ -93,6 +94,7 @@ function githubToken(): string {
 }
 
 async function main(): Promise<void> {
+  loadEnvFile();
   const args = parseArgs(process.argv.slice(2));
 
   const openRouterKey = process.env["OPENROUTER_API_KEY"];

@@ -122,7 +122,8 @@ mode than the failover, leave `fallback_models` empty.
 ## Local use
 
 ```bash
-export OPENROUTER_API_KEY=sk-or-v1-...
+cp .env.example .env      # then put your key in it
+# or: export OPENROUTER_API_KEY=sk-or-v1-...
 
 npm run review -- 'owner/repo#123'           # dry run, prints to stdout
 npm run review -- 'owner/repo#123' --post    # actually comment
@@ -130,8 +131,13 @@ npm run review -- 'owner/repo#123' --model x --severity high
 ```
 
 Dry-run by default, because the CLI exists for iterating on prompts against real
-PRs and iterating shouldn't spam a real thread. Falls back to `gh auth token` if
-`GITHUB_TOKEN` isn't set.
+PRs and iterating shouldn't spam a real thread.
+
+`.env` is read by the local tools (never by the Action, which takes its inputs
+from the workflow). A real environment variable always wins over the file. You
+do **not** need a `GITHUB_TOKEN`: with none set, the tools shell out to
+`gh auth token` and reuse your `gh auth login` session — which needs the `repo`
+scope if you intend to `--post`.
 
 Two tools worth knowing:
 

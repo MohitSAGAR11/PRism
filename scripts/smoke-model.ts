@@ -17,6 +17,7 @@ import { DEFAULT_CONFIG } from "../src/config.js";
 import { createClient, formatUsage } from "../src/llm/client.js";
 import { completeStructured, resolveRequestShape } from "../src/llm/complete.js";
 import { getModelInfo } from "../src/llm/models.js";
+import { loadEnvFile } from "../src/util/env.js";
 
 const Shape = z
   .object({
@@ -63,6 +64,7 @@ async function smoke(apiKey: string, model: string): Promise<boolean> {
 }
 
 async function main(): Promise<void> {
+  loadEnvFile();
   const apiKey = process.env["OPENROUTER_API_KEY"];
   if (!apiKey) throw new Error("OPENROUTER_API_KEY is not set");
 

@@ -18,6 +18,29 @@ A running note: several checks below say *read the output*, not *check it exited
 failures that matter here are the ones where everything "works" and the answer is
 wrong.
 
+## Credentials
+
+```bash
+cp .env.example .env      # then put your OpenRouter key in it
+```
+
+`.env` is read by `cli.ts`, `eval.ts` and the `scripts/` tools. It is *not* read
+by the Action, which takes its configuration from workflow inputs. A real
+environment variable always wins over the file, so `export` still works and
+still overrides.
+
+**You do not need a `GITHUB_TOKEN`.** With none set, every local tool shells out
+to `gh auth token` and reuses your `gh auth login` session. Check it with
+`gh auth status`. If you plan to `--post`, that session needs the `repo` scope:
+
+```bash
+curl -sI -H "Authorization: Bearer $(gh auth token)"   https://api.github.com/user | grep -i x-oauth-scopes
+```
+
+A blank `GITHUB_TOKEN=` line is ignored rather than set — otherwise it would
+shadow the `gh` fallback with a value that looks present and authenticates as
+nobody.
+
 ---
 
 ## Tier 0 — offline
@@ -207,7 +230,7 @@ failure from a pipeline failure, and given how the capability logic works it is
 the single most valuable paid test in this guide.
 
 ```bash
-export OPENROUTER_API_KEY=sk-or-v1-...
+cp .env.example .env    # put the key in it, or export it -- either works
 npm run check:model                                  # both configured defaults
 npm run check:model -- stealth/ox-alpha              # one specific slug
 ```

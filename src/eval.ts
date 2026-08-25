@@ -22,6 +22,7 @@ import type { Category } from "./config.js";
 import { createOctokit, parsePullRef } from "./github/client.js";
 import { createClient, formatUsage, addUsage, ZERO_USAGE, type Usage } from "./llm/client.js";
 import { run } from "./review/run.js";
+import { loadEnvFile } from "./util/env.js";
 
 /** How far a reported line may sit from the labelled line and still count. */
 const LINE_TOLERANCE = 3;
@@ -126,6 +127,7 @@ async function scoreModel(
 }
 
 async function main(): Promise<void> {
+  loadEnvFile();
   const argv = process.argv.slice(2);
   const openRouterKey = process.env["OPENROUTER_API_KEY"];
   if (!openRouterKey) throw new Error("OPENROUTER_API_KEY is not set");

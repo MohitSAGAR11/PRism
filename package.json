@@ -1,0 +1,38 @@
+{
+  "name": "pr-reviewer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI code review assistant for GitHub pull requests, powered by OpenRouter",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist --source-map --license licenses.txt",
+    "build:cli": "ncc build src/cli.ts -o dist-cli --source-map",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "eval": "tsx src/eval.ts",
+    "review": "tsx src/cli.ts",
+    "check:plumbing": "tsx scripts/plumbing-check.ts"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0",
+    "@octokit/rest": "^21.1.1",
+    "js-tiktoken": "^1.0.20",
+    "js-yaml": "^4.1.0",
+    "openai": "^4.104.0",
+    "zod": "^3.24.2",
+    "zod-to-json-schema": "^3.24.5"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.13.10",
+    "@vercel/ncc": "^0.38.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  }
+}

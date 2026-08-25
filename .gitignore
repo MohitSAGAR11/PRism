@@ -1,0 +1,8 @@
+node_modules/
+dist-cli/
+*.log
+.env
+.DS_Store
+
+# Eval labels stay local until you choose to commit them.
+fixtures/cases.json

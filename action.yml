@@ -1,0 +1,63 @@
+name: "AI PR Reviewer"
+description: "Review a pull request with an LLM via OpenRouter and post inline comments."
+author: "ai-pr-reviewer"
+branding:
+  icon: "eye"
+  color: "purple"
+
+inputs:
+  openrouter-api-key:
+    description: "OpenRouter API key. Store it as a repository secret."
+    required: true
+  github-token:
+    description: "Token used to read the PR and post the review."
+    required: true
+    default: ${{ github.token }}
+  pull-number:
+    description: "PR number. Defaults to the number in the event payload."
+    required: false
+  model:
+    description: "OpenRouter model slug for the find pass, e.g. anthropic/claude-sonnet-4.5."
+    required: false
+  verify-model:
+    description: "Model for the verify pass. Defaults to the find model. A different model here gives an independent second opinion."
+    required: false
+  fallback-models:
+    description: "Comma-separated models OpenRouter falls back to if the primary is unavailable."
+    required: false
+  effort:
+    description: "Reasoning effort: low, medium or high."
+    required: false
+  severity-threshold:
+    description: "Minimum severity for an inline comment: low, medium, high or critical."
+    required: false
+  min-confidence:
+    description: "Minimum confidence (0-1) for an inline comment."
+    required: false
+  max-inline-comments:
+    description: "Cap on inline comments per review."
+    required: false
+  paths-ignore:
+    description: "Comma-separated globs to skip, in addition to the built-in generated-file list."
+    required: false
+  focus:
+    description: "Comma-separated categories to weight: bug, edge-case, performance, security, test-gap, style."
+    required: false
+  dry-run:
+    description: "Analyse and log, but post nothing."
+    required: false
+    default: "false"
+
+outputs:
+  findings:
+    description: "Number of findings that passed the reporting bar."
+  inline-comments:
+    description: "Number of inline comments posted."
+  cost-usd:
+    description: "Total OpenRouter spend for this review, as reported by OpenRouter."
+  models:
+    description: "Comma-separated models that actually served the requests."
+
+runs:
+  using: "node20"
+  main: "dist/index.js"

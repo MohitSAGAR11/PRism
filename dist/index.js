@@ -45419,8 +45419,10 @@ const FileConfigSchema = objectType({
 })
     .strict();
 const DEFAULT_CONFIG = {
-    model: "anthropic/claude-sonnet-4.5",
-    verifyModel: "anthropic/claude-sonnet-4.5",
+    model: "stealth/ox-alpha",
+    // A different provider for the verify pass, so pass 2 is a genuinely
+    // independent opinion rather than one model grading its own homework.
+    verifyModel: "poolside/laguna-s-2.1:free",
     fallbackModels: [],
     effort: "high",
     severityThreshold: "medium",
@@ -45442,11 +45444,17 @@ function parseFileConfig(raw) {
  * so a workflow can override a repo without needing a commit to that repo.
  */
 function resolveConfig(file, inputs = {}) {
-    const model = inputs.model ?? file.model ?? DEFAULT_CONFIG.model;
+    // Whether anyone actually asked for a model, as opposed to inheriting one.
+    const explicitModel = inputs.model ?? file.model;
+    const model = explicitModel ?? DEFAULT_CONFIG.model;
     return {
         model,
-        // Defaults to the find model, so one key configures both passes.
-        verifyModel: inputs.verifyModel ?? file.verify_model ?? model,
+        // Follows an explicitly configured model, so setting one key repoints
+        // both passes. But when nothing is configured at all, fall through to the
+        // built-in verify default rather than to `model` -- the two built-ins are
+        // deliberately different providers, and pass 2 is only a real check when
+        // it is not the same model grading its own homework.
+        verifyModel: inputs.verifyModel ?? file.verify_model ?? explicitModel ?? DEFAULT_CONFIG.verifyModel,
         fallbackModels: inputs.fallbackModels ?? file.fallback_models ?? DEFAULT_CONFIG.fallbackModels,
         effort: inputs.effort ?? file.effort ?? DEFAULT_CONFIG.effort,
         severityThreshold: inputs.severityThreshold ?? file.severity_threshold ?? DEFAULT_CONFIG.severityThreshold,
@@ -58485,10 +58493,12 @@ async function loadCatalogue(apiKey) {
         if (res.ok) {
             const body = (await res.json());
             for (const m of body.data ?? []) {
+                const params = m.supported_parameters ?? [];
                 next.set(m.id, {
                     id: m.id,
                     contextLength: m.context_length ?? DEFAULT_CONTEXT_LENGTH,
-                    supportsStructuredOutputs: (m.supported_parameters ?? []).includes("structured_outputs"),
+                    supportsStructuredOutputs: params.includes("structured_outputs"),
+                    supportedParameters: params,
                 });
             }
         }
@@ -58505,11 +58515,38 @@ async function getModelInfo(apiKey, modelId) {
         id: modelId,
         contextLength: DEFAULT_CONTEXT_LENGTH,
         supportsStructuredOutputs: true,
+        // Empty means the lookup failed, not that the model supports nothing.
+        supportedParameters: [],
     });
 }
 /** Test seam: drop the memoized catalogue. */
 function resetCatalogue() {
     catalogue = null;
+}
+/**
+ * An empty parameter list means the model was not in the catalogue, not that it
+ * supports nothing -- assume the strongest mode rather than degrading a model we
+ * merely failed to look up.
+ */
+function unknown(info) {
+    return info.supportedParameters.length === 0;
+}
+function outputModeFor(info) {
+    if (unknown(info))
+        return "json_schema";
+    if (info.supportedParameters.includes("structured_outputs"))
+        return "json_schema";
+    if (info.supportedParameters.includes("response_format"))
+        return "json_object";
+    return "prompt_only";
+}
+/**
+ * Whether `reasoning: { effort }` is safe to send. Some models expose
+ * `reasoning` but not `reasoning_effort`; sending the effort knob to those
+ * costs the whole request.
+ */
+function supportsReasoningEffort(info) {
+    return unknown(info) || info.supportedParameters.includes("reasoning_effort");
 }
 /**
  * Providers that cache automatically versus those that need explicit
@@ -60080,15 +60117,62 @@ function buildSystemContent(model, system) {
     // Anthropic/Qwen/standard-Gemini only cache what is explicitly marked.
     return [{ type: "text", text: system, cache_control: { type: "ephemeral", ttl: "1h" } }];
 }
+const MODE_RANK = {
+    prompt_only: 0,
+    json_object: 1,
+    json_schema: 2,
+};
+/**
+ * Decide how to ask, across every model that could serve this request.
+ *
+ * `provider.require_parameters` restricts routing to endpoints supporting
+ * *every* parameter in the request, so a parameter the fallback cannot honour
+ * does not degrade the fallback -- it removes it. Taking the weakest mode across
+ * the whole candidate list keeps the fallback array actually usable, which is
+ * the entire reason it exists.
+ */
+async function resolveRequestShape(apiKey, model, fallbackModels = []) {
+    const candidates = [model, ...fallbackModels];
+    const infos = await Promise.all(candidates.map((m) => getModelInfo(apiKey, m)));
+    let mode = "json_schema";
+    let sendReasoningEffort = true;
+    for (const info of infos) {
+        const candidateMode = outputModeFor(info);
+        if (MODE_RANK[candidateMode] < MODE_RANK[mode])
+            mode = candidateMode;
+        if (!supportsReasoningEffort(info))
+            sendReasoningEffort = false;
+    }
+    return { mode, sendReasoningEffort };
+}
+/**
+ * The schema, for endpoints that cannot take it in the request.
+ *
+ * This goes in the *user* message, never the system prompt: the system prompt is
+ * the cacheable prefix and has to stay byte-identical across every request in a
+ * run, and the find and verify passes use different schemas.
+ */
+function schemaInstruction(schemaName, inner) {
+    return [
+        "",
+        "---",
+        "",
+        `Reply with a single JSON object matching this JSON Schema (named "${schemaName}"):`,
+        "",
+        JSON.stringify(inner, null, 2),
+        "",
+        "Output only that JSON object. No prose before or after it, no markdown fence.",
+    ].join("\n");
+}
 /**
  * One OpenRouter call that must come back matching `schema`.
  *
- * `response_format` plus `provider.require_parameters` keeps the request on
- * endpoints that actually honour structured outputs -- support is per endpoint,
- * not per model, so without the guard a request can silently land somewhere
- * that ignores the schema and returns prose. The zod re-validation below is
- * still not redundant: OpenRouter documents `strict` as enforced by some
- * providers and treated as a hint by others.
+ * Structured-output support is per endpoint, not per model, so the request is
+ * built from what the catalogue says the candidate endpoints actually accept:
+ * the schema travels in the request where it can, and in the prompt where it
+ * cannot. Either way the response is re-validated with zod here, which is the
+ * only guarantee that holds across every provider -- OpenRouter documents
+ * `strict` as enforced by some and treated as a hint by others.
  */
 async function completeStructured(opts) {
     const jsonSchema = zodToJsonSchema_zodToJsonSchema(opts.schema, {
@@ -60099,9 +60183,13 @@ async function completeStructured(opts) {
     // zodToJsonSchema nests the schema under definitions when given a name.
     const definitions = jsonSchema.definitions ?? {};
     const inner = definitions[opts.schemaName] ?? jsonSchema;
+    const shape = await resolveRequestShape(opts.apiKey, opts.model, opts.fallbackModels);
+    const user = shape.mode === "json_schema"
+        ? opts.user
+        : opts.user + schemaInstruction(opts.schemaName, inner);
     const messages = [
         { role: "system", content: buildSystemContent(opts.model, opts.system) },
-        { role: "user", content: opts.user },
+        { role: "user", content: user },
     ];
     let lastRaw = "";
     let lastError;
@@ -60113,16 +60201,24 @@ async function completeStructured(opts) {
             messages,
             max_tokens: opts.maxTokens ?? 16_000,
             temperature: 0,
-            response_format: {
-                type: "json_schema",
-                json_schema: { name: opts.schemaName, strict: true, schema: inner },
-            },
-            provider: { require_parameters: true },
             usage: { include: true },
         };
+        if (shape.mode === "json_schema") {
+            request["response_format"] = {
+                type: "json_schema",
+                json_schema: { name: opts.schemaName, strict: true, schema: inner },
+            };
+        }
+        else if (shape.mode === "json_object") {
+            request["response_format"] = { type: "json_object" };
+        }
+        // Only meaningful when the request actually asks for something optional --
+        // with nothing to require, it would only narrow routing for no gain.
+        if (shape.mode !== "prompt_only")
+            request["provider"] = { require_parameters: true };
         if (opts.fallbackModels?.length)
             request["models"] = [opts.model, ...opts.fallbackModels];
-        if (opts.effort)
+        if (opts.effort && shape.sendReasoningEffort)
             request["reasoning"] = { effort: opts.effort };
         const res = (await opts.client.chat.completions.create(request));
         const usage = readUsage(res.usage);
@@ -60378,6 +60474,7 @@ async function analyze(opts) {
         try {
             const res = await completeStructured({
                 client: opts.client,
+                apiKey: opts.openRouterKey,
                 model: opts.cfg.model,
                 fallbackModels: opts.cfg.fallbackModels,
                 system,
@@ -60449,6 +60546,7 @@ async function verify(opts) {
         try {
             return await completeStructured({
                 client: opts.client,
+                apiKey: opts.openRouterKey,
                 model: opts.cfg.verifyModel,
                 fallbackModels: opts.cfg.fallbackModels,
                 system,
@@ -60576,6 +60674,7 @@ async function run(opts) {
     const contextsByPath = new Map(sized.map((c) => [c.file.path, c]));
     const found = await analyze({
         client: opts.client,
+        openRouterKey: opts.openRouterKey,
         cfg,
         pr,
         groups,
@@ -60586,6 +60685,7 @@ async function run(opts) {
     log(`${found.findings.length} candidate finding(s)`);
     const checked = await verify({
         client: opts.client,
+        openRouterKey: opts.openRouterKey,
         cfg,
         findings: found.findings,
         contextsByPath,

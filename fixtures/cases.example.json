@@ -1,0 +1,34 @@
+[
+  {
+    "ref": "your-org/your-repo#101",
+    "expected": [
+      {
+        "file": "src/cart/total.ts",
+        "line": 42,
+        "category": "bug",
+        "note": "Loop bound is `i <= items.length`, so the last iteration reads undefined. A human reviewer caught this one in the original PR thread."
+      },
+      {
+        "file": "src/cart/total.ts",
+        "line": 57,
+        "category": "edge-case",
+        "note": "subtotal() divides by orders.length with no guard, so an empty cart is NaN."
+      }
+    ]
+  },
+  {
+    "ref": "your-org/your-repo#118",
+    "expected": [
+      {
+        "file": "src/api/users.ts",
+        "line": 24,
+        "category": "performance",
+        "note": "One fetch per id inside the loop. This is the parent commit of the batching fix in #119, so the defect is known to be real."
+      }
+    ]
+  },
+  {
+    "ref": "your-org/your-repo#204",
+    "expected": []
+  }
+]

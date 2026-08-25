@@ -122,6 +122,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
 
   const found = await analyze({
     client: opts.client,
+    openRouterKey: opts.openRouterKey,
     cfg,
     pr,
     groups,
@@ -133,6 +134,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
 
   const checked = await verify({
     client: opts.client,
+    openRouterKey: opts.openRouterKey,
     cfg,
     findings: found.findings,
     contextsByPath,

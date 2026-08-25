@@ -11,6 +11,7 @@ const VERIFY_CONCURRENCY = 4;
 
 export interface VerifyOptions {
   client: OpenAI;
+  openRouterKey: string;
   cfg: Config;
   findings: ReviewedFinding[];
   contextsByPath: Map<string, FileContext>;
@@ -49,6 +50,7 @@ export async function verify(opts: VerifyOptions): Promise<VerifyResult> {
     try {
       return await completeStructured({
         client: opts.client,
+        apiKey: opts.openRouterKey,
         model: opts.cfg.verifyModel,
         fallbackModels: opts.cfg.fallbackModels,
         system,

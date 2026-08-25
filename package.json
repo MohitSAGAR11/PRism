@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "eval": "tsx src/eval.ts",
     "review": "tsx src/cli.ts",
-    "check:plumbing": "tsx scripts/plumbing-check.ts"
+    "check:plumbing": "tsx scripts/plumbing-check.ts",
+    "check:model": "tsx scripts/smoke-model.ts"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",

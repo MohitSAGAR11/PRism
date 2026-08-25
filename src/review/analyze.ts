@@ -19,6 +19,7 @@ const GROUP_CONCURRENCY = 3;
 
 export interface AnalyzeOptions {
   client: OpenAI;
+  openRouterKey: string;
   cfg: Config;
   pr: PullRequestInfo;
   groups: FileGroup[];
@@ -50,6 +51,7 @@ export async function analyze(opts: AnalyzeOptions): Promise<AnalyzeResult> {
     try {
       const res = await completeStructured({
         client: opts.client,
+        apiKey: opts.openRouterKey,
         model: opts.cfg.model,
         fallbackModels: opts.cfg.fallbackModels,
         system,

@@ -52,8 +52,10 @@ export interface Config {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  model: "anthropic/claude-sonnet-4.5",
-  verifyModel: "anthropic/claude-sonnet-4.5",
+  model: "stealth/ox-alpha",
+  // A different provider for the verify pass, so pass 2 is a genuinely
+  // independent opinion rather than one model grading its own homework.
+  verifyModel: "poolside/laguna-s-2.1:free",
   fallbackModels: [],
   effort: "high",
   severityThreshold: "medium",
@@ -76,11 +78,18 @@ export function parseFileConfig(raw: string): FileConfig {
  * so a workflow can override a repo without needing a commit to that repo.
  */
 export function resolveConfig(file: FileConfig, inputs: Partial<Config> = {}): Config {
-  const model = inputs.model ?? file.model ?? DEFAULT_CONFIG.model;
+  // Whether anyone actually asked for a model, as opposed to inheriting one.
+  const explicitModel = inputs.model ?? file.model;
+  const model = explicitModel ?? DEFAULT_CONFIG.model;
   return {
     model,
-    // Defaults to the find model, so one key configures both passes.
-    verifyModel: inputs.verifyModel ?? file.verify_model ?? model,
+    // Follows an explicitly configured model, so setting one key repoints
+    // both passes. But when nothing is configured at all, fall through to the
+    // built-in verify default rather than to `model` -- the two built-ins are
+    // deliberately different providers, and pass 2 is only a real check when
+    // it is not the same model grading its own homework.
+    verifyModel:
+      inputs.verifyModel ?? file.verify_model ?? explicitModel ?? DEFAULT_CONFIG.verifyModel,
     fallbackModels: inputs.fallbackModels ?? file.fallback_models ?? DEFAULT_CONFIG.fallbackModels,
     effort: inputs.effort ?? file.effort ?? DEFAULT_CONFIG.effort,
     severityThreshold:

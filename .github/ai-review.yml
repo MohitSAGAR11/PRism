@@ -1,0 +1,70 @@
+# Review configuration for this repository.
+#
+# Also a worked example: copy it into your own repo's .github/ai-review.yml and
+# edit. Every key is optional, and Action inputs in the workflow override
+# anything set here.
+#
+# The schema is strict -- an unrecognised key is an error, not a warning, so a
+# typo like `sevrity_threshold` fails loudly instead of being silently ignored.
+
+# --- Models ----------------------------------------------------------------
+
+# Pass 1, the find pass. Cost and quality both live here: this is the call that
+# carries the diff and the file bodies.
+model: stealth/ox-alpha
+
+# Pass 2, the refute pass. Pointing this at a different provider is the whole
+# point -- left equal to `model` it is one model grading its own homework.
+verify_model: poolside/laguna-s-2.1:free
+
+# Automatic failover if the primary is rate-limited or down. Each model backs
+# the other. Note that a request only routes to endpoints supporting every
+# parameter it asks for, so the request is shaped to the weakest listed model.
+fallback_models:
+  - poolside/laguna-s-2.1:free
+  - stealth/ox-alpha
+
+# --- The reporting bar -----------------------------------------------------
+#
+# These are the precision knobs. Raise them if the bot gets noisy; a reviewer
+# that posts twenty comments of which four are real gets muted within a week.
+
+# low | medium | high  (default: high)
+# effort: high
+
+# Minimum severity for an inline comment: low | medium | high | critical
+# (default: medium)
+# severity_threshold: medium
+
+# Minimum calibrated confidence, 0-1 (default: 0.7)
+# min_confidence: 0.7
+
+# Cap on inline comments per review (default: 15). Findings past the cap are
+# demoted to the summary, never dropped.
+# max_inline_comments: 15
+
+# Cap on files per review (default: 60). Files past the cap are listed in the
+# summary as skipped -- a silent truncation would read as "reviewed everything".
+# max_files: 60
+
+# --- Scope -----------------------------------------------------------------
+
+# Extra globs to skip, on top of the built-in lockfile/generated/vendored list.
+# paths_ignore:
+#   - "docs/**"
+#   - "**/*.snap"
+
+# Categories to weight. Findings outside this list only surface at high or
+# critical severity. Valid: bug, edge-case, performance, security, test-gap, style
+# focus:
+#   - bug
+#   - edge-case
+#   - security
+
+# Repo-specific rules, always reportable at medium or above. These land in the
+# cacheable system prompt, so keep them stable.
+custom_rules:
+  - "Every relative import inside src/ must end in .js, not .ts -- the project is ESM and the extension is not optional."
+  - "Never use .optional() in a zod schema that is sent over the wire; use .nullable(). Strict JSON-schema mode requires every declared property to be in `required`."
+  - "Do not put .min()/.max() on a number in a wire schema; several providers reject range keywords. Clamp client-side instead."
+  - "dist/ must be rebuilt in the same commit as any src/ change, or CI silently runs stale code."

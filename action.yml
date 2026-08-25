@@ -17,7 +17,7 @@ inputs:
     description: "PR number. Defaults to the number in the event payload."
     required: false
   model:
-    description: "OpenRouter model slug for the find pass, e.g. anthropic/claude-sonnet-4.5."
+    description: "OpenRouter model slug for the find pass, e.g. stealth/ox-alpha."
     required: false
   verify-model:
     description: "Model for the verify pass. Defaults to the find model. A different model here gives an independent second opinion."

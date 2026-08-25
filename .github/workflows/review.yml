@@ -1,0 +1,52 @@
+name: AI review
+
+# ---------------------------------------------------------------------------
+# SECURITY: read this before editing.
+#
+# `pull_request_target` runs with the BASE repository's permissions and has
+# access to secrets, including on pull requests opened from forks. That is the
+# only reason it is used here -- a plain `pull_request` run from a fork gets a
+# read-only token and no secrets, so it cannot post a review at all.
+#
+# The single rule that makes this safe: NEVER CHECK OUT OR EXECUTE HEAD-BRANCH
+# CODE. This reviewer reads the diff and file contents through the GitHub API
+# and runs nothing from the pull request. Every constraint below protects that,
+# and each one is commented next to the line it protects.
+# ---------------------------------------------------------------------------
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+# Comment-only. `contents: write` would let a successful prompt injection do
+# real damage; without it, the worst outcome is a wrong comment.
+permissions:
+  contents: read
+  pull-requests: write
+
+# A second push supersedes a review still running for the first, so a fast
+# series of commits does not produce a pile of overlapping reviews.
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      # DO NOT add `ref:` here. Under pull_request_target the default checkout
+      # is the BASE revision, which is what we want -- adding
+      # `ref: ${{ github.event.pull_request.head.sha }}` would place untrusted
+      # PR code on disk in a job that holds secrets.
+      - uses: actions/checkout@v4
+
+      # DO NOT add an `npm ci` / `npm install` / `npm run build` step here.
+      # Any of them would execute scripts from the PR branch with this job's
+      # token and secrets. The action runs from the committed `dist/` bundle
+      # precisely so that no install step is needed.
+      - uses: ./
+        with:
+          openrouter-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+          github-token: ${{ github.token }}
+          # Everything else comes from .github/ai-review.yml, so tuning the
+          # review does not mean editing this security-sensitive file.

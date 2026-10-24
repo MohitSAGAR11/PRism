@@ -8,6 +8,14 @@ comment, in a summary where it can't.
 Models are routed through [OpenRouter](https://openrouter.ai), so switching
 models is a config string rather than an integration.
 
+<p align="center">
+  <a href="https://mohitsagar11.github.io/videos/prism.mp4">
+    <img src="docs/demo.jpg" alt="PRism: 20-second demo video, click to play" width="760">
+  </a>
+  <br>
+  <sub>▶ 20-second demo (click the image to play) · file: <a href="docs/demo.mp4"><code>docs/demo.mp4</code></a></sub>
+</p>
+
 ---
 
 ## What "good" means here

@@ -56,7 +56,7 @@ function Correction({ finding }: { finding: WebFinding }) {
 function ReportedFinding({ finding, letter, result }: { finding: WebFinding; letter: string; result: WebReviewResult }) {
   const diff = result.diffs.find((d) => d.path === finding.file);
   return (
-    <article className="finding" id={`finding-${finding.id}`} tabIndex={-1}>
+    <article className="card finding" id={`finding-${finding.id}`} tabIndex={-1} data-reveal>
       <header className="finding-head">
         <h3>
           <span className="finding-letter">{letter}</span>
@@ -147,7 +147,7 @@ export function Report({ result, letters, cached }: ReportProps) {
 
   return (
     <section className="report" aria-labelledby="report-title">
-      <header className="report-head">
+      <header className="report-head" data-reveal>
         <h2 id="report-title">
           <a href={result.pr.url} target="_blank" rel="noopener noreferrer">
             {result.pr.owner}/{result.pr.repo} <span className="report-num">#{result.pr.number}</span>
@@ -157,7 +157,7 @@ export function Report({ result, letters, cached }: ReportProps) {
       </header>
 
       {quiet ? (
-        <div className="quiet">
+        <div className="card quiet" data-reveal>
           <p className="quiet-title">Nothing worth saying.</p>
           <p>
             PRism would post a one-line summary and no inline comments. An empty review is the correct review for most
@@ -174,7 +174,7 @@ export function Report({ result, letters, cached }: ReportProps) {
       )}
 
       {refuted.length > 0 && (
-        <div className="refuted">
+        <div className="refuted" data-reveal>
           <h3 className="section-title">
             Refuted by pass 2 <span className="count">{refuted.length}</span>
           </h3>
@@ -191,7 +191,7 @@ export function Report({ result, letters, cached }: ReportProps) {
       )}
 
       {withheld.length > 0 && (
-        <div className="withheld-block">
+        <div className="withheld-block" data-reveal>
           <h3 className="section-title">
             Withheld <span className="count">{withheld.length}</span>
           </h3>
@@ -239,7 +239,7 @@ export function Report({ result, letters, cached }: ReportProps) {
         </ul>
       </details>
 
-      <dl className="meta">
+      <dl className="meta" data-reveal>
         <div>
           <dt>Find</dt>
           <dd className="mono">{shortModel(result.config.model)}</dd>

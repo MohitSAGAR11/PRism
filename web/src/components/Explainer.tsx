@@ -43,20 +43,27 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="how" id="how" aria-labelledby="how-title">
-      <h2 id="how-title">Two passes, and the second one is hostile</h2>
-      <ol className="how-steps">
+    <section className="section how" id="how" aria-labelledby="how-title">
+      <h2 id="how-title" className="section-heading" data-reveal>
+        How it works
+      </h2>
+      <p className="section-lede" data-reveal>
+        Two passes, and the second one is hostile.
+      </p>
+      <ol className="steps">
         {STEPS.map((s, i) => (
-          <li key={s.name}>
-            <span className="how-line" data-step={i} aria-hidden="true" />
-            <h3>{s.name}</h3>
-            <p>{s.body}</p>
+          <li key={s.name} className="step" data-step={i} data-reveal>
+            <span className="step-node" aria-hidden="true" />
+            <div className="card step-card">
+              <h3>{s.name}</h3>
+              <p>{s.body}</p>
+            </div>
           </li>
         ))}
       </ol>
-      <p className="how-note">
+      <p className="how-note" data-reveal>
         This page is a read-only dry run: it reads public pull requests through the GitHub API and never writes to them.
-        Diffs are capped at the demo's size limit; the Action has no such cap.
+        Diffs are capped at the demo&apos;s size limit; the Action has no such cap.
       </p>
     </section>
   );
@@ -78,26 +85,24 @@ export function Install() {
   const label = copied === "done" ? "Copied" : copied === "failed" ? "Copy blocked" : "Copy";
 
   return (
-    <section className="install" id="install" aria-labelledby="install-title">
-      <div className="install-text">
-        <h2 id="install-title">Put it on your repository</h2>
-        <p>
-          Add <code>OPENROUTER_API_KEY</code> as a repository secret, then commit this workflow. Every push to a pull
-          request gets reviewed. It comments, and never approves or blocks.
+    <section className="section install" id="install" aria-labelledby="install-title">
+      <div className="card cta" data-reveal>
+        <h2 id="install-title" className="cta-title">
+          From diff to <span className="grad">verdict</span>
+        </h2>
+        <p className="cta-sub">Put it on every pull request.</p>
+        <p className="cta-text">
+          Add <code>OPENROUTER_API_KEY</code> as a repository secret and commit the workflow below. It comments, and never
+          approves or blocks. It reads code through the API and never checks out or runs anything from the pull request,
+          which is what keeps <code>pull_request_target</code> safe on fork PRs.
         </p>
-        <p>
-          It reads code through the API and never checks out or runs anything from the pull request, which is what makes{" "}
-          <code>pull_request_target</code> safe on fork PRs here.
-        </p>
-        <p>
-          <a href="https://github.com/MohitSAGAR11/PRism" target="_blank" rel="noopener noreferrer">
-            Source, configuration, and security notes on GitHub
-          </a>
-        </p>
+        <a className="btn btn-pill" href="https://github.com/MohitSAGAR11/PRism" target="_blank" rel="noopener noreferrer">
+          Source and docs on GitHub <span aria-hidden="true">→</span>
+        </a>
       </div>
-      <figure className="snippet">
+      <figure className="card snippet" data-reveal>
         <figcaption>
-          <span className="mono">review.yml</span>
+          <span className="mono">.github/workflows/review.yml</span>
           <button type="button" className="btn btn-small" onClick={copy} aria-live="polite">
             {label}
           </button>

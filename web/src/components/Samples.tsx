@@ -12,22 +12,23 @@ export function Samples({ samples, activeUrl, running, onRun }: SamplesProps) {
   return (
     <div className="samples">
       <p className="samples-title">Or open a real review</p>
-      <ul>
+      <ul className="chips">
         {samples.map((s) => {
           const current = activeUrl === s.url;
-          const state = current ? "showing" : s.cached ? "instant" : "runs live";
+          const state = current ? "showing" : s.cached ? "instant" : "live";
           return (
             <li key={s.url}>
               <button
                 type="button"
-                className="sample"
+                className="chip"
                 aria-current={current || undefined}
                 onClick={() => onRun(s.url)}
                 disabled={running}
+                title={s.blurb}
               >
-                <span className="sample-ref mono">{s.label}</span>
-                <span className="sample-blurb">{s.blurb}</span>
-                <span className="sample-state">{state}</span>
+                <span className="chip-ref mono">{s.label}</span>
+                <span className="visually-hidden">: {s.blurb}.</span>
+                <span className="chip-state">{state}</span>
               </button>
             </li>
           );

@@ -1,26 +1,29 @@
 /* ---------- Responsive ---------- */
 
 @media (max-width: 960px) {
-  .hero {
+  .bento {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "copy" "plate" "samples";
-    grid-template-rows: auto;
-    row-gap: 36px;
-    padding-block: 40px 48px;
   }
-  .samples {
-    margin-top: 0;
-  }
-  .install {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 32px;
-  }
-  .how-steps {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .meta {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .nav-mark,
+  .nav-icon {
+    display: none;
+  }
+  .nav {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .nav-pill a {
+    padding: 8px 12px;
+    font-size: 13px;
   }
 }
 
@@ -28,25 +31,68 @@
   :root {
     --gutter: 16px;
   }
-  .topbar nav {
-    gap: 16px;
-    font-size: 13.5px;
+  .hero {
+    padding-top: 112px;
+  }
+  .field-label,
+  .field-hint,
+  .key {
+    margin-left: 12px;
+  }
+  .btn-run {
+    min-width: 0;
+    padding: 0 18px;
+  }
+  /* Narrow screens need steeper angles or the bands never visibly cross. */
+  .ribbons {
+    height: 190px;
+  }
+  .ribbon {
+    top: 74px;
+  }
+  .ribbon-filled {
+    transform: rotate(8deg);
+  }
+  .ribbon-outlined {
+    transform: rotate(-7deg);
+  }
+  .ribbon-word {
+    padding: 11px 0;
+    font-size: 12.5px;
+  }
+  .ribbon-dot {
+    margin: 0 16px;
+  }
+  .section {
+    padding-top: 80px;
   }
   .plate {
-    padding: 18px 16px 16px;
+    padding: 20px 18px 18px;
     min-height: 0;
   }
   .spectrum {
     --field: 124px;
     --stroke: 94px;
   }
+  .stat {
+    padding: 16px 18px;
+  }
+  .stat-value {
+    font-size: 1.625rem;
+  }
   .meta {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .finding {
+    padding: 20px 16px;
   }
   .finding-meta,
   .struck-reason,
   .struck-detail {
     margin-left: 0;
+  }
+  .struck-list {
+    padding: 4px 16px;
   }
   .struck summary,
   .withheld {
@@ -56,23 +102,49 @@
   .struck .sev {
     grid-column: 2;
   }
-  .how,
-  .install {
-    padding-block: 52px;
+  .quiet {
+    padding: 32px 22px;
+  }
+  .steps {
+    padding-left: 34px;
+  }
+  .step-node {
+    left: -34px;
+  }
+  .steps::before {
+    left: 11px;
+  }
+  .step-card {
+    padding: 20px;
+  }
+  .cta {
+    padding: 52px 20px 44px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .ribbon-track,
+  .beam,
+  .stage-pulse,
+  .timeline-live .timeline-node,
+  .spectrum[data-scanning] .spectrum-band::after,
+  .spectrum-line[data-status="pending"] .spectrum-stroke {
+    animation: none;
+  }
+  .beam {
+    display: none;
+  }
   .spectrum-letter,
   .spectrum-stroke {
     transition: opacity 200ms ease;
   }
-  .spectrum[data-scanning] .spectrum-band::after,
-  .spectrum-line[data-status="pending"] .spectrum-stroke,
-  .stage-pulse {
-    animation: none;
-  }
-  .btn:active:not(:disabled) {
+  .btn:active:not(:disabled),
+  .chip:hover:not(:disabled),
+  .stat:hover,
+  .step-card:hover {
     transform: none;
   }
 }

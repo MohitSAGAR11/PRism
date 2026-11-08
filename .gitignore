@@ -6,3 +6,5 @@ dist-cli/
 
 # Eval labels stay local until you choose to commit them.
 fixtures/cases.json
+dist-server/
+web/dist/

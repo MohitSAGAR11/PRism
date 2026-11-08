@@ -1,0 +1,108 @@
+/* ---------- How it works / Install ---------- */
+
+.how,
+.install {
+  padding-block: 72px;
+  border-top: 1px solid var(--rule);
+}
+
+.how h2,
+.install h2 {
+  font-size: clamp(1.625rem, 1.1rem + 1.6vw, 2.375rem);
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  max-width: 22ch;
+}
+
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+  margin: 40px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.how-steps li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.how-line {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--ink);
+}
+
+.how-line[data-step="1"] {
+  background: none;
+  border-left: 2px dashed var(--ink-3);
+}
+
+.how-steps h3 {
+  font-size: 1.125rem;
+  font-weight: 680;
+}
+
+.how-steps p {
+  margin-top: 8px;
+  color: var(--ink-2);
+  max-width: 42ch;
+}
+
+.how-note {
+  margin-top: 40px;
+  max-width: 70ch;
+  color: var(--ink-3);
+  font-size: 14.5px;
+}
+
+.install {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.install-text p {
+  margin-top: 16px;
+  max-width: 50ch;
+  color: var(--ink-2);
+}
+
+.snippet {
+  margin: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--plate-raised);
+  overflow: hidden;
+}
+
+.snippet figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px 8px 16px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.snippet pre {
+  margin: 0;
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.footer {
+  padding-block: 28px 40px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-size: 13.5px;
+}

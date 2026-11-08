@@ -1,0 +1,115 @@
+/* ---------- Hero ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-areas: "copy plate" "samples plate";
+  grid-template-rows: auto 1fr;
+  column-gap: 56px;
+  align-items: start;
+  padding-block: 64px 72px;
+}
+
+.hero-copy {
+  grid-area: copy;
+}
+
+.hero-plate {
+  grid-area: plate;
+  scroll-margin-top: 16px;
+}
+
+.hero-samples {
+  grid-area: samples;
+}
+
+.hero h1 {
+  font-size: clamp(2.25rem, 1.3rem + 2.7vw, 3.6rem);
+  line-height: 1.02;
+  font-weight: 720;
+  letter-spacing: -0.035em;
+}
+
+.lede {
+  margin-top: 20px;
+  max-width: 44ch;
+  color: var(--ink-2);
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.console {
+  margin-top: 36px;
+}
+
+.samples {
+  margin-top: 32px;
+}
+
+.samples-title {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.samples ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--rule);
+}
+
+.sample {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "ref state" "blurb state";
+  column-gap: 16px;
+  width: 100%;
+  padding: 11px 8px;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.sample:disabled {
+  cursor: progress;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sample:hover:not(:disabled) {
+    background: var(--hover);
+  }
+}
+
+.sample[aria-current] {
+  background: var(--hover);
+}
+
+.sample-ref {
+  grid-area: ref;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sample-blurb {
+  grid-area: blurb;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.sample-state {
+  grid-area: state;
+  align-self: center;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.sample[aria-current] .sample-state {
+  color: var(--ink);
+  font-weight: 600;
+}

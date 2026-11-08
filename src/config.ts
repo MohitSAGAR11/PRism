@@ -52,10 +52,10 @@ export interface Config {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  model: "stealth/ox-alpha",
+  model: "z-ai/glm-5.3-flash",
   // A different provider for the verify pass, so pass 2 is a genuinely
   // independent opinion rather than one model grading its own homework.
-  verifyModel: "poolside/laguna-s-2.1:free",
+  verifyModel: "deepseek/deepseek-v4-flash",
   fallbackModels: [],
   effort: "high",
   severityThreshold: "medium",

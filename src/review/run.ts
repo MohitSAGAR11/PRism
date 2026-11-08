@@ -27,7 +27,21 @@ export interface RunOptions {
   inputs?: Partial<Config>;
   dryRun: boolean;
   log?: (message: string) => void;
+  /**
+   * Structured progress for callers that render it (the web demo streams these
+   * over SSE). Purely observational: nothing here changes what the run does.
+   */
+  onEvent?: (event: RunEvent) => void;
 }
+
+/** Stage-by-stage progress, in the order a run emits it. */
+export type RunEvent =
+  | { type: "pr"; pr: PullRequestInfo }
+  | { type: "files"; reviewable: number; skipped: number }
+  | { type: "analyzing"; groups: number }
+  | { type: "candidates"; findings: ReviewedFinding[] }
+  | { type: "verdict"; finding: ReviewedFinding; refuted: boolean; reason: string }
+  | { type: "verified"; survived: number; refuted: number };
 
 export interface RunResult {
   pr: PullRequestInfo;
@@ -40,6 +54,14 @@ export interface RunResult {
   filesReviewed: number;
   skipped: SkippedFile[];
   posted: boolean;
+  /** Every pass-1 candidate, before verification touched it. */
+  candidates: ReviewedFinding[];
+  /** Candidates that survived pass 2, with any corrected severity/confidence. */
+  survivors: ReviewedFinding[];
+  /** Request groups whose pass-1 call failed outright. */
+  failures: Array<{ paths: string[]; error: string }>;
+  /** The files that were actually reviewed, with their parsed hunks. */
+  files: ParsedFile[];
 }
 
 async function loadRepoConfig(
@@ -61,9 +83,11 @@ async function loadRepoConfig(
 
 export async function run(opts: RunOptions): Promise<RunResult> {
   const log = opts.log ?? (() => {});
+  const emit = opts.onEvent ?? (() => {});
   const { gh, ref, pull } = opts;
 
   const pr = await getPullRequest(gh, ref, pull);
+  emit({ type: "pr", pr });
   log(`PR #${pr.number} "${pr.title}" by ${pr.author} at ${pr.headSha.slice(0, 7)}`);
 
   const fileConfig = await loadRepoConfig(gh, ref, pr.headSha, log);
@@ -82,6 +106,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     files = files.slice(0, cfg.maxFiles);
   }
   log(`${files.length} file(s) to review, ${skipped.length} skipped`);
+  emit({ type: "files", reviewable: files.length, skipped: skipped.length });
 
   const filesByPath = new Map<string, ParsedFile>(files.map((f) => [f.path, f]));
 
@@ -102,6 +127,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     return {
       pr, cfg, split, refuted: [], summary,
       usage: ZERO_USAGE, models: [], filesReviewed: 0, skipped, posted: false,
+      candidates: [], survivors: [], failures: [], files: [],
     };
   }
 
@@ -117,6 +143,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
   const sized = contexts.map((c) => (c.tokens > budget ? shrinkContext(c) : c));
   const groups = groupFiles(sized, budget);
   log(`${groups.length} request group(s)`);
+  emit({ type: "analyzing", groups: groups.length });
 
   const contextsByPath = new Map<string, FileContext>(sized.map((c) => [c.file.path, c]));
 
@@ -131,6 +158,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     onProgress: log,
   });
   log(`${found.findings.length} candidate finding(s)`);
+  emit({ type: "candidates", findings: found.findings });
 
   const checked = await verify({
     client: opts.client,
@@ -139,8 +167,10 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     findings: found.findings,
     contextsByPath,
     onProgress: log,
+    onVerdict: (finding, refuted, reason) => emit({ type: "verdict", finding, refuted, reason }),
   });
   log(`${checked.survivors.length} survived verification, ${checked.refuted.length} refuted`);
+  emit({ type: "verified", survived: checked.survivors.length, refuted: checked.refuted.length });
 
   const alreadyPosted = await collectPostedFingerprints(gh, ref, pull);
   const split = splitFindings({
@@ -197,5 +227,9 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     summary, usage, models,
     filesReviewed: files.length,
     skipped, posted,
+    candidates: found.findings,
+    survivors: checked.survivors,
+    failures: found.failures,
+    files,
   };
 }

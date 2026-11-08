@@ -1,0 +1,497 @@
+/* ---------- Report ---------- */
+
+.report {
+  padding-block: 56px 24px;
+  border-top: 1px solid var(--rule);
+}
+
+.report-head h2 {
+  font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2rem);
+  font-weight: 700;
+}
+
+.report-head h2 a {
+  text-decoration: none;
+}
+
+.report-head h2 a:hover {
+  text-decoration: underline;
+}
+
+.report-num {
+  color: var(--ink-3);
+}
+
+.report-summary {
+  margin-top: 10px;
+  max-width: 70ch;
+  color: var(--ink-2);
+  font-size: 1.0625rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 1.125rem;
+  font-weight: 680;
+}
+
+.count {
+  color: var(--ink-3);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-note {
+  margin-top: 6px;
+  max-width: 70ch;
+  color: var(--ink-2);
+  font-size: 14.5px;
+}
+
+.quiet {
+  margin-top: 40px;
+  padding: 32px 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
+}
+
+.quiet-title {
+  font-size: clamp(2rem, 1.3rem + 2.4vw, 3.25rem);
+  font-weight: 720;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.quiet p:not(.quiet-title) {
+  margin-top: 12px;
+  max-width: 62ch;
+  color: var(--ink-2);
+}
+
+.findings,
+.refuted,
+.withheld-block,
+.failures {
+  margin-top: 48px;
+}
+
+.finding {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: 24px;
+}
+
+.finding:focus {
+  outline: none;
+}
+
+.finding-head h3 {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 1.25rem;
+  font-weight: 680;
+  line-height: 1.3;
+}
+
+.finding-letter,
+.letter-chip,
+.struck-letter {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--plate);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.letter-chip {
+  min-width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+
+.finding-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 8px 0 0 38px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.sev {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sev-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--sev);
+}
+
+.sev[data-severity="critical"] {
+  --sev: var(--sev-critical);
+}
+.sev[data-severity="high"] {
+  --sev: var(--sev-high);
+}
+.sev[data-severity="medium"] {
+  --sev: var(--sev-medium);
+}
+.sev[data-severity="low"] {
+  --sev: var(--sev-low);
+}
+
+/* Diff excerpt */
+
+.diff,
+.diff-outside {
+  margin-top: 16px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--plate-raised);
+  overflow: hidden;
+}
+
+.diff-outside > p {
+  padding: 12px 16px;
+  color: var(--ink-2);
+  font-size: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.diff-scroll {
+  overflow-x: auto;
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.diff-hunk {
+  caption-side: top;
+  padding: 6px 14px;
+  text-align: left;
+  color: var(--ink-3);
+  background: var(--plate-sunk);
+  border-bottom: 1px solid var(--rule);
+}
+
+.diff-num {
+  width: 1%;
+  padding: 0 8px;
+  text-align: right;
+  color: var(--ink-3);
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.diff-sign {
+  width: 1%;
+  padding: 0 6px;
+  color: var(--ink-3);
+  user-select: none;
+}
+
+.diff-code {
+  padding-right: 16px;
+  white-space: pre;
+}
+
+.diff-code code {
+  font-size: inherit;
+}
+
+.diff-row[data-kind="add"] {
+  background: var(--add-bg);
+}
+.diff-row[data-kind="add"] .diff-sign {
+  color: var(--add-ink);
+}
+.diff-row[data-kind="del"] {
+  background: var(--del-bg);
+}
+.diff-row[data-kind="del"] .diff-sign {
+  color: var(--del-ink);
+}
+
+.diff-row[data-target] {
+  background: var(--sodium);
+}
+
+.diff-pin {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--plate);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.diff-comment {
+  padding: 16px 18px 18px;
+  border-top: 1px solid var(--rule);
+  background: var(--plate);
+}
+
+.comment-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.comment-cat {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.comment-body {
+  margin-top: 10px;
+  max-width: 72ch;
+}
+
+.fails {
+  margin-top: 10px;
+  max-width: 72ch;
+  color: var(--ink);
+}
+
+.fails-label {
+  font-weight: 700;
+}
+
+.suggestion {
+  margin-top: 14px;
+}
+
+.suggestion-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.suggestion pre {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--add-bg);
+  overflow-x: auto;
+  font-size: 12.5px;
+}
+
+.verdict-note {
+  margin-top: 12px;
+  max-width: 76ch;
+  color: var(--ink-2);
+  font-size: 14.5px;
+}
+
+.verdict-label {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* Refuted and withheld rows: dense, struck, never removed */
+
+.struck-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--rule);
+}
+
+.struck,
+.withheld {
+  padding: 14px 0;
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: 24px;
+}
+
+.struck:focus,
+.withheld:focus {
+  outline: none;
+  background: var(--hover);
+}
+
+.struck summary,
+.withheld {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.struck summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.struck summary::-webkit-details-marker {
+  display: none;
+}
+
+.struck-letter {
+  min-width: 22px;
+  height: 22px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--ink-3);
+  border: 1px solid var(--rule-strong);
+  text-decoration: line-through;
+}
+
+.struck-title {
+  color: var(--ink-2);
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-3);
+  text-decoration-thickness: 1px;
+}
+
+.withheld .struck-title {
+  text-decoration: none;
+}
+
+.struck-where {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.struck .sev {
+  color: var(--ink-3);
+}
+
+.struck .sev-dot {
+  background: var(--rule-strong);
+}
+
+.struck-reason {
+  margin: 8px 0 0 46px;
+  max-width: 76ch;
+  font-size: 14.5px;
+}
+
+.stamp {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 6px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.struck-detail {
+  margin: 10px 0 0 46px;
+  max-width: 76ch;
+  color: var(--ink-2);
+  font-size: 14.5px;
+}
+
+.withheld-why {
+  grid-column: 2 / -1;
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.failures ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--ink-2);
+}
+
+/* Files and meta */
+
+.files {
+  margin-top: 40px;
+  font-size: 14.5px;
+}
+
+.files summary {
+  cursor: pointer;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.file-list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.file-list .mono {
+  overflow-wrap: anywhere;
+}
+
+.file-delta {
+  flex: none;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.file-delta .add {
+  color: var(--add-ink);
+}
+.file-delta .del {
+  color: var(--del-ink);
+}
+
+.file-skipped .mono {
+  color: var(--ink-3);
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, auto));
+  justify-content: start;
+  gap: 8px 36px;
+  margin: 32px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.meta dt {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.meta dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+}

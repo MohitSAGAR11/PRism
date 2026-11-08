@@ -1,0 +1,326 @@
+{
+  "version": 1,
+  "pr": {
+    "owner": "expressjs",
+    "repo": "express",
+    "number": 7584,
+    "title": "fix: res.send() preserve data for non-Uint8Array typed arrays",
+    "author": "hasan19524",
+    "url": "https://github.com/expressjs/express/pull/7584",
+    "headSha": "c8b4dcd384e4956d28dd146ce1e8ccc9500e4db1",
+    "isFork": true
+  },
+  "config": {
+    "model": "z-ai/glm-5.3-flash",
+    "verifyModel": "deepseek/deepseek-v4-flash",
+    "effort": "medium",
+    "severityThreshold": "medium",
+    "minConfidence": 0.7
+  },
+  "stats": {
+    "filesReviewed": 3,
+    "candidates": 2,
+    "survived": 0,
+    "refuted": 2,
+    "reported": 0,
+    "durationMs": 35231
+  },
+  "findings": [
+    {
+      "id": "6e358f8fe36c8c40",
+      "file": "lib/response.js",
+      "line": 170,
+      "category": "test-gap",
+      "severity": "low",
+      "confidence": 0.8,
+      "title": "No test covers the new typed-array branch",
+      "body": "The PR adds a new code path in `res.send` for non-Buffer `ArrayBuffer.isView` bodies (Float32Array, DataView, etc.), but no test was added. test/res.send.js has extensive coverage for comparable body types (Buffer, string), so this branch should have a test asserting the bytes round-trip correctly, e.g. `res.send(new Float32Array([1.5]))` produces the expected 12-byte body and Content-Length.",
+      "failureScenario": "A regression in the `Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)` conversion (e.g. ignoring byteOffset for subarray views) would ship undetected.",
+      "suggestion": null,
+      "placement": "refuted",
+      "original": null,
+      "verdict": {
+        "refuted": true,
+        "reason": "The finding claims that no test was added for the new typed-array branch, but the test file (test/res.send.js) is not provided in the code shown. Without evidence of the test coverage, the claim cannot be confirmed from the given code. The reasoning is plausible but unverifiable from the provided file."
+      }
+    },
+    {
+      "id": "0404f6f75d9b6403",
+      "file": "lib/request.js",
+      "line": 392,
+      "category": "edge-case",
+      "severity": "low",
+      "confidence": 0.6,
+      "title": "Malformed bracketed Host header produces a wrong slice",
+      "body": "`hostname.indexOf(']')` returns -1 when the Host header is a malformed IPv6 literal without a closing bracket (e.g. `Host: [::1`), so `hostname.slice(1, -1)` silently drops the last character instead of handling the malformed input. The result then flows into `isIP`/split and yields garbage subdomains. Consider falling back to the unstripped hostname when `indexOf(']') === -1`.",
+      "failureScenario": "Request with `Host: [::1` (attacker-controllable header) makes `req.subdomains` compute from the mangled string `\":1\"` rather than the original hostname.",
+      "suggestion": null,
+      "placement": "refuted",
+      "original": null,
+      "verdict": {
+        "refuted": true,
+        "reason": "The `hostname` getter (lines 449–463) processes the raw Host header before it reaches the `subdomains` getter. For a malformed IPv6 literal like `[::1`, the getter returns `[` (a single bracket), not the original string. Therefore the `subdomains` getter never receives `[::1` and the claimed slice producing `:1` cannot occur."
+      }
+    }
+  ],
+  "diffs": [
+    {
+      "path": "lib/request.js",
+      "status": "modified",
+      "hunks": [
+        {
+          "header": "@@ -223,7 +223,7 @@ req.range = function range(size, options) {",
+          "lines": [
+            {
+              "kind": "context",
+              "oldLine": 223,
+              "newLine": 223,
+              "content": " * This uses the \"query parser\" setting to parse the raw"
+            },
+            {
+              "kind": "context",
+              "oldLine": 224,
+              "newLine": 224,
+              "content": " * string into an object."
+            },
+            {
+              "kind": "context",
+              "oldLine": 225,
+              "newLine": 225,
+              "content": " *"
+            },
+            {
+              "kind": "del",
+              "oldLine": 226,
+              "newLine": null,
+              "content": " * @return {String}"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 226,
+              "content": " * @return {Object}"
+            },
+            {
+              "kind": "context",
+              "oldLine": 227,
+              "newLine": 227,
+              "content": " * @api public"
+            },
+            {
+              "kind": "context",
+              "oldLine": 228,
+              "newLine": 228,
+              "content": " */"
+            },
+            {
+              "kind": "context",
+              "oldLine": 229,
+              "newLine": 229,
+              "content": ""
+            }
+          ]
+        },
+        {
+          "header": "@@ -386,7 +386,12 @@ defineGetter(req, 'subdomains', function subdomains() {",
+          "lines": [
+            {
+              "kind": "context",
+              "oldLine": 386,
+              "newLine": 386,
+              "content": "  if (!hostname) return [];"
+            },
+            {
+              "kind": "context",
+              "oldLine": 387,
+              "newLine": 387,
+              "content": ""
+            },
+            {
+              "kind": "context",
+              "oldLine": 388,
+              "newLine": 388,
+              "content": "  var offset = this.app.get('subdomain offset');"
+            },
+            {
+              "kind": "del",
+              "oldLine": 389,
+              "newLine": null,
+              "content": "  var subdomains = !isIP(hostname)"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 389,
+              "content": "  // IPv6 literals are returned bracketed (e.g. \"[::1]\"); strip the brackets"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 390,
+              "content": "  // before the IP check so they are not split on \".\" like a hostname."
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 391,
+              "content": "  var host = hostname[0] === '['"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 392,
+              "content": "    ? hostname.slice(1, hostname.indexOf(']'))"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 393,
+              "content": "    : hostname;"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 394,
+              "content": "  var subdomains = !isIP(host)"
+            },
+            {
+              "kind": "context",
+              "oldLine": 390,
+              "newLine": 395,
+              "content": "    ? hostname.split('.').reverse()"
+            },
+            {
+              "kind": "context",
+              "oldLine": 391,
+              "newLine": 396,
+              "content": "    : [hostname];"
+            },
+            {
+              "kind": "context",
+              "oldLine": 392,
+              "newLine": 397,
+              "content": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "lib/response.js",
+      "status": "modified",
+      "hunks": [
+        {
+          "header": "@@ -167,6 +167,12 @@ res.send = function send(body) {",
+          "lines": [
+            {
+              "kind": "context",
+              "oldLine": 167,
+              "newLine": 167,
+              "content": "    if (Buffer.isBuffer(chunk)) {"
+            },
+            {
+              "kind": "context",
+              "oldLine": 168,
+              "newLine": 168,
+              "content": "      // get length of Buffer"
+            },
+            {
+              "kind": "context",
+              "oldLine": 169,
+              "newLine": 169,
+              "content": "      len = chunk.length"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 170,
+              "content": "    } else if (ArrayBuffer.isView(chunk)) {"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 171,
+              "content": "      // typed array view (e.g. Uint8Array, Float32Array): convert without"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 172,
+              "content": "      // treating it as a string, which would corrupt the data"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 173,
+              "content": "      chunk = Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength)"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 174,
+              "content": "      encoding = undefined"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 175,
+              "content": "      len = chunk.length"
+            },
+            {
+              "kind": "context",
+              "oldLine": 170,
+              "newLine": 176,
+              "content": "    } else if (!generateETag && chunk.length < 1000) {"
+            },
+            {
+              "kind": "context",
+              "oldLine": 171,
+              "newLine": 177,
+              "content": "      // just calculate length when no ETag + small chunk"
+            },
+            {
+              "kind": "context",
+              "oldLine": 172,
+              "newLine": 178,
+              "content": "      len = Buffer.byteLength(chunk, encoding)"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "path": "Readme.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "lib/request.js",
+      "status": "modified",
+      "additions": 7,
+      "deletions": 2
+    },
+    {
+      "path": "lib/response.js",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 0
+    }
+  ],
+  "skipped": [],
+  "failures": [],
+  "usage": {
+    "promptTokens": 41680,
+    "completionTokens": 5352,
+    "cachedTokens": 0,
+    "cost": 0.0062288858
+  },
+  "models": [
+    "deepseek/deepseek-v4-flash",
+    "z-ai/glm-5.3-flash"
+  ],
+  "reviewedAt": "2026-11-08T10:39:15.832Z"
+}

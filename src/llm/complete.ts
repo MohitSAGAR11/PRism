@@ -14,7 +14,7 @@ export interface CompleteOptions<T extends z.ZodTypeAny> {
   client: OpenAI;
   /** Needed to read endpoint capabilities from the model catalogue. */
   apiKey: string;
-  /** Primary OpenRouter model slug, e.g. "stealth/ox-alpha". */
+  /** Primary OpenRouter model slug, e.g. "z-ai/glm-5.3-flash". */
   model: string;
   /** Tried in order if the primary is down or rate-limited. */
   fallbackModels?: string[];

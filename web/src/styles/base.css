@@ -1,0 +1,345 @@
+/* PRism web demo. World: a spectral atlas plate. Colour lives in the band and
+   the severity marks; everything else is ink on plate. */
+
+:root {
+  --plate: #eff0ec;
+  --plate-raised: #f8f8f5;
+  --plate-sunk: #e6e8e2;
+  --ink: #15181d;
+  --ink-2: #464b53;
+  --ink-3: #62676f;
+  --rule: rgb(21 24 29 / 0.13);
+  --rule-strong: rgb(21 24 29 / 0.26);
+  --hover: rgb(21 24 29 / 0.05);
+
+  --sev-critical: #b42318;
+  --sev-high: #b84c09;
+  --sev-medium: #866300;
+  --sev-low: #2f5fa8;
+
+  --add-bg: rgb(36 122 64 / 0.1);
+  --add-ink: #1d6b37;
+  --del-bg: rgb(180 35 24 / 0.08);
+  --del-ink: #9f2a1e;
+  /* The sodium D line: the one yellow on the plate marks the cited line. */
+  --sodium: rgb(236 190 52 / 0.32);
+  --sodium-solid: #ecbe34;
+
+  --band: linear-gradient(
+    90deg,
+    oklch(58% 0.17 27),
+    oklch(70% 0.16 55),
+    oklch(85% 0.15 95),
+    oklch(72% 0.13 150),
+    oklch(62% 0.11 225),
+    oklch(50% 0.15 290)
+  );
+
+  --font-sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --gutter: 24px;
+  --max: 1240px;
+  --radius: 14px;
+  --radius-sm: 8px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --plate: #0f1114;
+    --plate-raised: #16191d;
+    --plate-sunk: #0b0d0f;
+    --ink: #e7e8e3;
+    --ink-2: #b0b4ba;
+    --ink-3: #8d9299;
+    --rule: rgb(231 232 227 / 0.12);
+    --rule-strong: rgb(231 232 227 / 0.24);
+    --hover: rgb(231 232 227 / 0.06);
+    --sev-critical: #f2705c;
+    --sev-high: #f0954b;
+    --sev-medium: #e2bb4f;
+    --sev-low: #7aa5ec;
+    --add-bg: rgb(76 175 110 / 0.14);
+    --add-ink: #7fd39b;
+    --del-bg: rgb(242 112 92 / 0.12);
+    --del-ink: #f39a8b;
+    --sodium: rgb(236 190 52 / 0.2);
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 24px;
+}
+
+body {
+  margin: 0;
+  background: var(--plate);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  font-feature-settings: "ss01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  caret-color: var(--ink);
+  scrollbar-color: var(--rule-strong) transparent;
+}
+
+::selection {
+  background: var(--sodium-solid);
+  color: #15181d;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+code,
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  font-variant-ligatures: none;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip {
+  position: absolute;
+  left: 16px;
+  top: -48px;
+  padding: 8px 12px;
+  background: var(--ink);
+  color: var(--plate);
+  border-radius: var(--radius-sm);
+  z-index: 10;
+}
+
+.skip:focus {
+  top: 12px;
+}
+
+/* ---------- Shell ---------- */
+
+.topbar,
+main,
+.footer {
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.wordmark {
+  font-weight: 750;
+  font-size: 19px;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 22px;
+  font-size: 14px;
+}
+
+.topbar nav a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.topbar nav a:hover {
+  color: var(--ink);
+}
+
+/* ---------- Buttons and fields ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 550;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--plate);
+}
+
+.btn-small {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled) {
+    background: var(--hover);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--ink) 86%, var(--plate));
+  }
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+}
+
+.field {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  background: var(--plate-raised);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  transition: border-color 160ms ease;
+}
+
+.field::placeholder {
+  color: var(--ink-3);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--hover);
+}
+
+.field-row[data-invalid] .field {
+  border-color: var(--sev-critical);
+}
+
+.btn-run {
+  height: 46px;
+  min-width: 104px;
+}
+
+.field-hint {
+  margin-top: 8px;
+  min-height: 1.5em;
+  color: var(--ink-3);
+  font-size: 13.5px;
+}
+
+.field-error {
+  color: var(--sev-critical);
+}
+
+.key {
+  margin-top: 14px;
+}
+
+.key-field {
+  margin-top: 10px;
+  display: grid;
+}
+
+.field-key {
+  height: 42px;
+}

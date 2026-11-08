@@ -1,0 +1,78 @@
+/* ---------- Responsive ---------- */
+
+@media (max-width: 960px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "copy" "plate" "samples";
+    grid-template-rows: auto;
+    row-gap: 36px;
+    padding-block: 40px 48px;
+  }
+  .samples {
+    margin-top: 0;
+  }
+  .install {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+  .how-steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --gutter: 16px;
+  }
+  .topbar nav {
+    gap: 16px;
+    font-size: 13.5px;
+  }
+  .plate {
+    padding: 18px 16px 16px;
+    min-height: 0;
+  }
+  .spectrum {
+    --field: 124px;
+    --stroke: 94px;
+  }
+  .meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .finding-meta,
+  .struck-reason,
+  .struck-detail {
+    margin-left: 0;
+  }
+  .struck summary,
+  .withheld {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+  .struck-where,
+  .struck .sev {
+    grid-column: 2;
+  }
+  .how,
+  .install {
+    padding-block: 52px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spectrum-letter,
+  .spectrum-stroke {
+    transition: opacity 200ms ease;
+  }
+  .spectrum[data-scanning] .spectrum-band::after,
+  .spectrum-line[data-status="pending"] .spectrum-stroke,
+  .stage-pulse {
+    animation: none;
+  }
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
+}

@@ -2,7 +2,17 @@ import OpenAI from "openai";
 
 export const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
-export function createClient(apiKey: string): OpenAI {
+export interface ClientOverrides {
+  /**
+   * Custom fetch. The web server uses this to bind every model call to a
+   * per-request AbortSignal, so a timed-out review actually stops spending.
+   */
+  fetch?: typeof fetch;
+  maxRetries?: number;
+  timeout?: number;
+}
+
+export function createClient(apiKey: string, overrides: ClientOverrides = {}): OpenAI {
   return new OpenAI({
     apiKey,
     baseURL: OPENROUTER_BASE_URL,
@@ -11,8 +21,9 @@ export function createClient(apiKey: string): OpenAI {
       "HTTP-Referer": "https://github.com/ai-pr-reviewer",
       "X-OpenRouter-Title": "AI PR Reviewer",
     },
-    maxRetries: 3,
-    timeout: 180_000,
+    maxRetries: overrides.maxRetries ?? 3,
+    timeout: overrides.timeout ?? 180_000,
+    ...(overrides.fetch ? { fetch: overrides.fetch as never } : {}),
   });
 }
 

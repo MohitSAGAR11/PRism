@@ -16,6 +16,8 @@ export interface VerifyOptions {
   findings: ReviewedFinding[];
   contextsByPath: Map<string, FileContext>;
   onProgress?: (message: string) => void;
+  /** Called as each verdict lands, in completion order. Observational only. */
+  onVerdict?: (finding: ReviewedFinding, refuted: boolean, reason: string) => void;
 }
 
 export interface VerifyResult {
@@ -48,7 +50,7 @@ export async function verify(opts: VerifyOptions): Promise<VerifyResult> {
     const ctx = opts.contextsByPath.get(finding.file);
     const code = ctx ? renderFileContext(ctx) : "(file context unavailable)";
     try {
-      return await completeStructured({
+      const result = await completeStructured({
         client: opts.client,
         apiKey: opts.openRouterKey,
         model: opts.cfg.verifyModel,
@@ -60,7 +62,10 @@ export async function verify(opts: VerifyOptions): Promise<VerifyResult> {
         effort: opts.cfg.effort,
         maxTokens: 4_000,
       });
+      opts.onVerdict?.(finding, result.value.refuted, result.value.reason);
+      return result;
     } catch {
+      opts.onVerdict?.(finding, false, "verification call failed; confidence capped");
       return null;
     }
   });

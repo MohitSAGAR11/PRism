@@ -95,8 +95,8 @@ like `sevrity_threshold` fails loudly instead of being silently ignored.
 
 | Key | Default | What it does |
 |---|---|---|
-| `model` | `stealth/ox-alpha` | Pass 1. Carries the diff and file bodies, so most of the cost. |
-| `verify_model` | `poolside/laguna-s-2.1:free` | Pass 2. Defaults to `model` if you set `model` and nothing else. |
+| `model` | `z-ai/glm-5.3-flash` | Pass 1. Carries the diff and file bodies, so most of the cost. |
+| `verify_model` | `deepseek/deepseek-v4-flash` | Pass 2. Defaults to `model` if you set `model` and nothing else. |
 | `fallback_models` | `[]` | Automatic failover if the primary is unavailable. |
 | `effort` | `high` | Reasoning effort: `low`, `medium`, `high`. |
 | `severity_threshold` | `medium` | Minimum severity for a comment. |
@@ -161,6 +161,89 @@ whether the bug is in fetching/parsing or in the model call. `--show-prompt`
 dumps the exact payload.
 
 See [TESTING.md](TESTING.md) for how to exercise every feature, cheapest first.
+
+## Web demo
+
+A small server plus a web page: paste a public pull request URL, watch the two
+passes run, and see every candidate with what happened to it, including the
+ones pass 2 refuted and why. It reuses `run()` from `src/review/run.ts`
+unchanged; the server (`src/server/`) only adds streaming, validation and
+limits, and the page (`web/`, Vite + React) is served by the same process.
+
+**It never writes to GitHub.** Every web review runs with `dryRun: true`, and
+the GitHub client is wrapped so any non-GET request is refused before it leaves
+the process (`makeReadOnly` in `src/server/result.ts`, covered by tests).
+
+### Run it locally
+
+```bash
+npm install
+npm run build:demo        # web/dist + dist-server
+npm start                 # http://localhost:8787, reads .env
+
+# or, while editing:
+npm run dev:server        # API on :8787
+npm run dev:web           # page on :5174, proxies /api to :8787
+```
+
+### What protects the shared key
+
+| Guard | Default | Env var |
+|---|---|---|
+| Public repos only | private and internal repos refused, even if the token can read them | n/a |
+| URL validation | strict `github.com/owner/repo/pull/N` | n/a |
+| Diff size cap | 30 files / 1,500 changed lines | `MAX_CHANGED_FILES`, `MAX_CHANGED_LINES` |
+| Per-request timeout | 240 s; aborts in-flight model calls | `REVIEW_TIMEOUT_SEC` |
+| Reviews per IP per hour (shared key) | 3 | `REVIEWS_PER_IP_PER_HOUR` |
+| Reviews per day (shared key, all visitors) | 150 | `REVIEWS_PER_DAY` |
+| Reviews per IP per hour (visitor's own key) | 20 | `BYOK_REVIEWS_PER_IP_PER_HOUR` |
+| Requests per IP per minute (cache hits included) | 10 | `REQUESTS_PER_IP_PER_MINUTE` |
+| Concurrent reviews | 3 | `MAX_CONCURRENT_REVIEWS` |
+| Open result streams per IP | 3 | n/a |
+| Result cache, keyed by repo + PR + head SHA | 500 entries, in memory | `CACHE_SIZE` |
+
+Models are pinned by the server, so a reviewed repo's `.github/ai-review.yml`
+cannot point the demo at an expensive model (its `custom_rules` are ignored too,
+so they cannot inflate the prompt): `REVIEW_MODEL`
+(default `z-ai/glm-5.3-flash`), `REVIEW_VERIFY_MODEL` (default
+`deepseek/deepseek-v4-flash`), `REVIEW_EFFORT` (default `medium`).
+
+A visitor may paste their own OpenRouter key. It is sent in the POST body,
+used for that one review's model calls, and never logged, stored, cached or
+echoed; error messages are scrubbed of anything key-shaped.
+
+Limits and cache are in memory: run **one** instance (`railway.json` pins
+`numReplicas: 1`). A restart resets them.
+
+### Sample reviews
+
+The sample buttons replay real reviews stored in `samples/`, so they are
+instant and free. Regenerate or add one (pick merged or closed PRs so the head
+SHA never moves, and add it to `SAMPLES` in `src/server/samples.ts`):
+
+```bash
+npm run seed:samples                                  # every sample
+npm run seed:samples -- https://github.com/o/r/pull/1 # one PR
+```
+
+### Deploy (Docker / Railway)
+
+```bash
+docker build -t prism-demo .
+docker run --rm -p 8787:8787 --env-file .env prism-demo
+```
+
+`.env` is excluded by `.dockerignore` and never enters the image. On Railway,
+deploy the repo (it picks up `Dockerfile` and `railway.json`) and set:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `OPENROUTER_API_KEY` | recommended | Shared model key. Without it, visitors must bring their own. The account needs credits. |
+| `GITHUB_TOKEN` | recommended | A fine-grained token with **no repository access** (public read only). Without one, GitHub's anonymous limit is 60 requests/hour, which a handful of reviews will exhaust. |
+| `TRUST_PROXY` | yes, on Railway | `1`, so rate limits key on the visitor's IP (the last `X-Forwarded-For` hop, which the proxy appends) rather than the proxy's. Leave unset when the server is reached directly. |
+| `PORT` | no | Railway injects it; defaults to 8787. |
+
+Everything in the table above is optional.
 
 ## Cost
 

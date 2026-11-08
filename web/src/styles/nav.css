@@ -1,0 +1,129 @@
+/* ---------- Floating pill nav with a lamp over the active section ---------- */
+
+.nav {
+  position: fixed;
+  inset: 16px 0 auto;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  max-width: var(--max);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  pointer-events: none;
+}
+
+.nav > * {
+  pointer-events: auto;
+}
+
+.nav-mark {
+  justify-self: start;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  background: var(--rose-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nav-pill {
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 10px 30px -18px rgb(26 26 46 / 0.35);
+}
+
+.nav-pill ul {
+  position: relative;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-pill a {
+  position: relative;
+  z-index: 1;
+  display: block;
+  padding: 8px 18px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.nav-pill a:hover,
+.nav-pill a[aria-current] {
+  color: var(--ink);
+}
+
+.nav-lamp {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 999px;
+  background: var(--bg-3);
+  transition:
+    transform 0.35s var(--ease),
+    width 0.35s var(--ease);
+}
+
+/* The lamp: a short rose bar on the pill's rim with a soft bloom under it. */
+.nav-lamp::before,
+.nav-lamp::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--rose);
+}
+
+.nav-lamp::before {
+  top: -6px;
+  width: 34%;
+  height: 3px;
+}
+
+.nav-lamp::after {
+  top: -14px;
+  width: 70%;
+  height: 16px;
+  opacity: 0.45;
+  filter: blur(10px);
+}
+
+.nav-icon {
+  justify-self: end;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--ink);
+  transition:
+    border-color 0.3s var(--ease),
+    transform 160ms var(--ease-out);
+}
+
+.nav-icon:hover {
+  border-color: var(--rose);
+}
+
+.nav-icon:active {
+  transform: scale(0.95);
+}

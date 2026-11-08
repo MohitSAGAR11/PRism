@@ -11,18 +11,18 @@
 
 # Pass 1, the find pass. Cost and quality both live here: this is the call that
 # carries the diff and the file bodies.
-model: stealth/ox-alpha
+model: z-ai/glm-5.3-flash
 
 # Pass 2, the refute pass. Pointing this at a different provider is the whole
 # point -- left equal to `model` it is one model grading its own homework.
-verify_model: poolside/laguna-s-2.1:free
+verify_model: deepseek/deepseek-v4-flash
 
 # Automatic failover if the primary is rate-limited or down. Each model backs
 # the other. Note that a request only routes to endpoints supporting every
 # parameter it asks for, so the request is shaped to the weakest listed model.
 fallback_models:
-  - poolside/laguna-s-2.1:free
-  - stealth/ox-alpha
+  - deepseek/deepseek-v4-flash
+  - z-ai/glm-5.3-flash
 
 # --- The reporting bar -----------------------------------------------------
 #

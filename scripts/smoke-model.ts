@@ -10,7 +10,7 @@
  * failure from a pipeline failure.
  *
  *   npx tsx scripts/smoke-model.ts                    # the configured defaults
- *   npx tsx scripts/smoke-model.ts stealth/ox-alpha   # one specific slug
+ *   npx tsx scripts/smoke-model.ts z-ai/glm-5.3-flash  # one specific slug
  */
 import { z } from "zod";
 import { DEFAULT_CONFIG } from "../src/config.js";

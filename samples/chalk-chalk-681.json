@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "pr": {
+    "owner": "chalk",
+    "repo": "chalk",
+    "number": 681,
+    "title": "fix: validate non-numeric level options",
+    "author": "Bojun-Vvibe",
+    "url": "https://github.com/chalk/chalk/pull/681",
+    "headSha": "1fd030972464b7aa9eb0812ca88d54a159261d0f",
+    "isFork": true
+  },
+  "config": {
+    "model": "z-ai/glm-5.3-flash",
+    "verifyModel": "deepseek/deepseek-v4-flash",
+    "effort": "medium",
+    "severityThreshold": "medium",
+    "minConfidence": 0.7
+  },
+  "stats": {
+    "filesReviewed": 2,
+    "candidates": 1,
+    "survived": 0,
+    "refuted": 1,
+    "reported": 0,
+    "durationMs": 26904
+  },
+  "findings": [
+    {
+      "id": "5ffefc1ccdd0495f",
+      "file": "source/index.js",
+      "line": 25,
+      "category": "style",
+      "severity": "low",
+      "confidence": 0.9,
+      "title": "Indentation does not match repository convention",
+      "body": "The code uses 4 spaces for indentation, but the repository's `.editorconfig` specifies `indent_style = tab`.",
+      "failureScenario": "The code is merged without fixing the indentation, violating the project's style guide.",
+      "suggestion": "\tif (options.level !== undefined && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {",
+      "placement": "refuted",
+      "original": null,
+      "verdict": {
+        "refuted": true,
+        "reason": "The code uses tabs for indentation, as shown on line 25 and throughout the file, which matches the repository's `.editorconfig` convention of `indent_style = tab`."
+      }
+    }
+  ],
+  "diffs": [
+    {
+      "path": "source/index.js",
+      "status": "modified",
+      "hunks": [
+        {
+          "header": "@@ -22,7 +22,7 @@ const levelMapping = [",
+          "lines": [
+            {
+              "kind": "context",
+              "oldLine": 22,
+              "newLine": 22,
+              "content": "const styles = Object.create(null);"
+            },
+            {
+              "kind": "context",
+              "oldLine": 23,
+              "newLine": 23,
+              "content": ""
+            },
+            {
+              "kind": "context",
+              "oldLine": 24,
+              "newLine": 24,
+              "content": "const applyOptions = (object, options = {}) => {"
+            },
+            {
+              "kind": "del",
+              "oldLine": 25,
+              "newLine": null,
+              "content": "\tif (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {"
+            },
+            {
+              "kind": "add",
+              "oldLine": null,
+              "newLine": 25,
+              "content": "\tif (options.level !== undefined && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {"
+            },
+            {
+              "kind": "context",
+              "oldLine": 26,
+              "newLine": 26,
+              "content": "\t\tthrow new Error('The `level` option should be an integer from 0 to 3');"
+            },
+            {
+              "kind": "context",
+              "oldLine": 27,
+              "newLine": 27,
+              "content": "\t}"
+            },
+            {
+              "kind": "context",
+              "oldLine": 28,
+              "newLine": 28,
+              "content": ""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "path": "source/index.js",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1
+    },
+    {
+      "path": "test/instance.js",
+      "status": "modified",
+      "additions": 8,
+      "deletions": 0
+    }
+  ],
+  "skipped": [],
+  "failures": [],
+  "usage": {
+    "promptTokens": 7749,
+    "completionTokens": 3204,
+    "cachedTokens": 0,
+    "cost": 0.00148778
+  },
+  "models": [
+    "deepseek/deepseek-v4-flash",
+    "z-ai/glm-5.3-flash"
+  ],
+  "reviewedAt": "2026-11-08T10:32:36.339Z"
+}

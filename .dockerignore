@@ -1,0 +1,23 @@
+# Secrets never enter the build context, let alone the image.
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output are rebuilt inside the image.
+node_modules
+dist
+dist-cli
+dist-server
+web/dist
+
+# Not needed to build or run the demo.
+.git
+.github
+.impeccable
+docs
+fixtures
+tests
+scripts
+*.log
+*.md
+coverage

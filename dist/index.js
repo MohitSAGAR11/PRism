@@ -45419,10 +45419,10 @@ const FileConfigSchema = objectType({
 })
     .strict();
 const DEFAULT_CONFIG = {
-    model: "stealth/ox-alpha",
+    model: "z-ai/glm-5.3-flash",
     // A different provider for the verify pass, so pass 2 is a genuinely
     // independent opinion rather than one model grading its own homework.
-    verifyModel: "poolside/laguna-s-2.1:free",
+    verifyModel: "deepseek/deepseek-v4-flash",
     fallbackModels: [],
     effort: "high",
     severityThreshold: "medium",
@@ -49456,8 +49456,20 @@ const dist_src_Octokit = Octokit.plugin(requestLog, legacyRestEndpointMethods, p
 
 ;// CONCATENATED MODULE: ./src/github/client.ts
 
-function createOctokit(token) {
-    return new dist_src_Octokit({ auth: token, userAgent: "pr-reviewer" });
+/**
+ * An empty token gives an unauthenticated client: enough for public repos,
+ * at GitHub's much lower anonymous rate limit.
+ */
+function createOctokit(token, overrides = {}) {
+    const noop = () => { };
+    return new dist_src_Octokit({
+        ...(token ? { auth: token } : {}),
+        userAgent: "pr-reviewer",
+        ...(overrides.fetch ? { request: { fetch: overrides.fetch } } : {}),
+        ...(overrides.quiet
+            ? { log: { debug: noop, info: noop, warn: noop, error: noop } }
+            : {}),
+    });
 }
 /** Parse "owner/repo#123", the form the local CLI accepts. */
 function parsePullRef(ref) {
@@ -57240,7 +57252,7 @@ const API_KEY_SENTINEL = '<Missing Key>';
 ;// CONCATENATED MODULE: ./src/llm/client.ts
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-function createClient(apiKey) {
+function createClient(apiKey, overrides = {}) {
     return new openai({
         apiKey,
         baseURL: OPENROUTER_BASE_URL,
@@ -57249,8 +57261,9 @@ function createClient(apiKey) {
             "HTTP-Referer": "https://github.com/ai-pr-reviewer",
             "X-OpenRouter-Title": "AI PR Reviewer",
         },
-        maxRetries: 3,
-        timeout: 180_000,
+        maxRetries: overrides.maxRetries ?? 3,
+        timeout: overrides.timeout ?? 180_000,
+        ...(overrides.fetch ? { fetch: overrides.fetch } : {}),
     });
 }
 const ZERO_USAGE = {
@@ -58481,16 +58494,20 @@ async function upsertSummary(opts) {
 ;// CONCATENATED MODULE: ./src/llm/models.ts
 
 const DEFAULT_CONTEXT_LENGTH = 128_000;
+const CATALOGUE_TIMEOUT_MS = 15_000;
 let catalogue = null;
 async function loadCatalogue(apiKey) {
     if (catalogue)
         return catalogue;
     const next = new Map();
+    let loaded = false;
     try {
         const res = await fetch(`${OPENROUTER_BASE_URL}/models`, {
             headers: { Authorization: `Bearer ${apiKey}` },
+            signal: AbortSignal.timeout(CATALOGUE_TIMEOUT_MS),
         });
         if (res.ok) {
+            loaded = true;
             const body = (await res.json());
             for (const m of body.data ?? []) {
                 const params = m.supported_parameters ?? [];
@@ -58506,7 +58523,10 @@ async function loadCatalogue(apiKey) {
     catch {
         // A catalogue miss is not fatal -- fall back to conservative defaults.
     }
-    catalogue = next;
+    // Only memoize a real answer: a failed lookup (a bad key, a timeout) would
+    // otherwise pin conservative defaults for the life of a long-running process.
+    if (loaded)
+        catalogue = next;
     return next;
 }
 async function getModelInfo(apiKey, modelId) {
@@ -60544,7 +60564,7 @@ async function verify(opts) {
         const ctx = opts.contextsByPath.get(finding.file);
         const code = ctx ? renderFileContext(ctx) : "(file context unavailable)";
         try {
-            return await completeStructured({
+            const result = await completeStructured({
                 client: opts.client,
                 apiKey: opts.openRouterKey,
                 model: opts.cfg.verifyModel,
@@ -60556,8 +60576,11 @@ async function verify(opts) {
                 effort: opts.cfg.effort,
                 maxTokens: 4_000,
             });
+            opts.onVerdict?.(finding, result.value.refuted, result.value.reason);
+            return result;
         }
         catch {
+            opts.onVerdict?.(finding, false, "verification call failed; confidence capped");
             return null;
         }
     });
@@ -60624,8 +60647,10 @@ async function loadRepoConfig(gh, ref, gitRef, log) {
 }
 async function run(opts) {
     const log = opts.log ?? (() => { });
+    const emit = opts.onEvent ?? (() => { });
     const { gh, ref, pull } = opts;
     const pr = await getPullRequest(gh, ref, pull);
+    emit({ type: "pr", pr });
     log(`PR #${pr.number} "${pr.title}" by ${pr.author} at ${pr.headSha.slice(0, 7)}`);
     const fileConfig = await loadRepoConfig(gh, ref, pr.headSha, log);
     const cfg = resolveConfig(fileConfig, opts.inputs);
@@ -60641,6 +60666,7 @@ async function run(opts) {
         files = files.slice(0, cfg.maxFiles);
     }
     log(`${files.length} file(s) to review, ${skipped.length} skipped`);
+    emit({ type: "files", reviewable: files.length, skipped: skipped.length });
     const filesByPath = new Map(files.map((f) => [f.path, f]));
     if (files.length === 0) {
         const split = { inline: [], summaryOnly: [], belowBar: [], duplicates: [] };
@@ -60659,6 +60685,7 @@ async function run(opts) {
         return {
             pr, cfg, split, refuted: [], summary,
             usage: ZERO_USAGE, models: [], filesReviewed: 0, skipped, posted: false,
+            candidates: [], survivors: [], failures: [], files: [],
         };
     }
     const conventions = await collectConventions(gh, ref, pr.headSha);
@@ -60671,6 +60698,7 @@ async function run(opts) {
     const sized = contexts.map((c) => (c.tokens > budget ? shrinkContext(c) : c));
     const groups = groupFiles(sized, budget);
     log(`${groups.length} request group(s)`);
+    emit({ type: "analyzing", groups: groups.length });
     const contextsByPath = new Map(sized.map((c) => [c.file.path, c]));
     const found = await analyze({
         client: opts.client,
@@ -60683,6 +60711,7 @@ async function run(opts) {
         onProgress: log,
     });
     log(`${found.findings.length} candidate finding(s)`);
+    emit({ type: "candidates", findings: found.findings });
     const checked = await verify({
         client: opts.client,
         openRouterKey: opts.openRouterKey,
@@ -60690,8 +60719,10 @@ async function run(opts) {
         findings: found.findings,
         contextsByPath,
         onProgress: log,
+        onVerdict: (finding, refuted, reason) => emit({ type: "verdict", finding, refuted, reason }),
     });
     log(`${checked.survivors.length} survived verification, ${checked.refuted.length} refuted`);
+    emit({ type: "verified", survived: checked.survivors.length, refuted: checked.refuted.length });
     const alreadyPosted = await collectPostedFingerprints(gh, ref, pull);
     const split = splitFindings({
         findings: checked.survivors,
@@ -60740,6 +60771,10 @@ async function run(opts) {
         summary, usage, models,
         filesReviewed: files.length,
         skipped, posted,
+        candidates: found.findings,
+        survivors: checked.survivors,
+        failures: found.failures,
+        files,
     };
 }
 

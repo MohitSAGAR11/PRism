@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "pr": {
+    "owner": "sindresorhus",
+    "repo": "ky",
+    "number": 868,
+    "title": "Fix: validate retry.afterStatusCodes is an array",
+    "author": "JSap0914",
+    "url": "https://github.com/sindresorhus/ky/pull/868",
+    "headSha": "d2a127098a3b256b5cea849a9d16fa1e27afbaa1",
+    "isFork": true
+  },
+  "config": {
+    "model": "z-ai/glm-5.3-flash",
+    "verifyModel": "deepseek/deepseek-v4-flash",
+    "effort": "medium",
+    "severityThreshold": "medium",
+    "minConfidence": 0.7
+  },
+  "stats": {
+    "filesReviewed": 2,
+    "candidates": 0,
+    "survived": 0,
+    "refuted": 0,
+    "reported": 0,
+    "durationMs": 7339
+  },
+  "findings": [],
+  "diffs": [],
+  "reviewedFiles": [
+    {
+      "path": "source/utils/normalize.ts",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 0
+    },
+    {
+      "path": "test/retry.ts",
+      "status": "modified",
+      "additions": 13,
+      "deletions": 0
+    }
+  ],
+  "skipped": [],
+  "failures": [],
+  "usage": {
+    "promptTokens": 27174,
+    "completionTokens": 58,
+    "cachedTokens": 0,
+    "cost": 0.001478996
+  },
+  "models": [
+    "z-ai/glm-5.3-flash"
+  ],
+  "reviewedAt": "2026-11-08T10:37:39.463Z"
+}

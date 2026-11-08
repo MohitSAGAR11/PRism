@@ -1,0 +1,210 @@
+/* ---------- Spectrum: the signature ---------- */
+
+.spectrum {
+  margin: 26px 0 0;
+  --field: 148px;
+  --stroke: 116px;
+}
+
+.spectrum-field {
+  position: relative;
+  height: var(--field);
+}
+
+.spectrum-band {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--band);
+  opacity: 0.8;
+  overflow: hidden;
+}
+
+.spectrum[data-scanning] .spectrum-band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 18%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.85), transparent);
+  animation: scan 1.8s linear infinite;
+}
+
+@keyframes scan {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(560%);
+  }
+}
+
+.spectrum-line {
+  --h: 1;
+  position: absolute;
+  bottom: 0;
+  width: 28px;
+  height: var(--field);
+  margin-left: -14px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.spectrum-line[data-status="pending"] {
+  --h: 0.62;
+}
+
+.spectrum-line[data-status="refuted"] {
+  --h: 0.26;
+}
+
+.spectrum-letter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 650;
+  text-align: center;
+  line-height: 16px;
+  transform: translateY(calc((1 - var(--h)) * var(--stroke)));
+  transition:
+    transform 560ms var(--ease-out),
+    opacity 300ms ease;
+}
+
+.spectrum-stroke {
+  position: absolute;
+  left: 13px;
+  bottom: 10px;
+  width: 2px;
+  height: var(--stroke);
+  background: currentColor;
+  transform-origin: bottom;
+  transform: scaleY(var(--h));
+  transition:
+    transform 560ms var(--ease-out),
+    opacity 300ms ease;
+}
+
+.spectrum-ghost {
+  position: absolute;
+  left: 13px;
+  bottom: 10px;
+  height: var(--stroke);
+  border-left: 1px dotted var(--ink-3);
+  opacity: 0;
+  transition: opacity 400ms ease 200ms;
+}
+
+.spectrum-line[data-status="refuted"] .spectrum-ghost {
+  opacity: 0.55;
+}
+
+.spectrum-foot {
+  position: absolute;
+  left: 9px;
+  bottom: -2px;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--sev);
+  box-shadow: 0 0 0 2px var(--plate-raised);
+}
+
+.spectrum-line[data-severity="critical"] {
+  --sev: var(--sev-critical);
+}
+.spectrum-line[data-severity="high"] {
+  --sev: var(--sev-high);
+}
+.spectrum-line[data-severity="medium"] {
+  --sev: var(--sev-medium);
+}
+.spectrum-line[data-severity="low"] {
+  --sev: var(--sev-low);
+}
+
+.spectrum-line[data-status="pending"] .spectrum-stroke {
+  opacity: 0.55;
+  animation: breathe 1.4s ease-in-out infinite;
+}
+
+.spectrum-line[data-status="refuted"] {
+  color: var(--ink-3);
+}
+
+.spectrum-line[data-status="refuted"] .spectrum-stroke {
+  opacity: 0.7;
+}
+
+.spectrum-line[data-status="refuted"] .spectrum-letter {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.spectrum-line[data-status="refuted"] .spectrum-foot {
+  background: var(--rule-strong);
+}
+
+.spectrum-line:focus-visible {
+  outline-offset: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .spectrum-line:hover .spectrum-stroke {
+    width: 3px;
+    left: 12.5px;
+  }
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.spectrum-scale {
+  position: relative;
+  height: 30px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.spectrum-segment {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-left: 1px solid var(--rule-strong);
+  padding-left: 6px;
+}
+
+.spectrum-segment:first-child {
+  border-left-color: transparent;
+}
+
+.spectrum-tick {
+  display: block;
+  height: 6px;
+}
+
+.spectrum-file {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+}
+
+.spectrum-file-idle {
+  padding-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+

@@ -1,7 +1,26 @@
 import { Octokit } from "@octokit/rest";
 
-export function createOctokit(token: string): Octokit {
-  return new Octokit({ auth: token, userAgent: "pr-reviewer" });
+export interface OctokitOverrides {
+  /** Custom fetch, e.g. one bound to a per-request AbortSignal. */
+  fetch?: typeof fetch;
+  /** Silence Octokit's request logging (it logs every 404 as a warning). */
+  quiet?: boolean;
+}
+
+/**
+ * An empty token gives an unauthenticated client: enough for public repos,
+ * at GitHub's much lower anonymous rate limit.
+ */
+export function createOctokit(token: string, overrides: OctokitOverrides = {}): Octokit {
+  const noop = (): void => {};
+  return new Octokit({
+    ...(token ? { auth: token } : {}),
+    userAgent: "pr-reviewer",
+    ...(overrides.fetch ? { request: { fetch: overrides.fetch } } : {}),
+    ...(overrides.quiet
+      ? { log: { debug: noop, info: noop, warn: noop, error: noop } }
+      : {}),
+  });
 }
 
 export type GitHubClient = Octokit;

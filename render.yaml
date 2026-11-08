@@ -1,0 +1,18 @@
+# Render Blueprint for the PRism web demo (one Docker service = API + web UI).
+# Dashboard -> New -> Blueprint -> pick this repo. Secrets marked `sync: false`
+# are prompted for in the dashboard and never live in the repo.
+services:
+  - type: web
+    name: prism-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: TRUST_PROXY
+        value: "1"

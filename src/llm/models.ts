@@ -18,6 +18,7 @@ export interface ModelInfo {
 }
 
 const DEFAULT_CONTEXT_LENGTH = 128_000;
+const CATALOGUE_TIMEOUT_MS = 15_000;
 
 let catalogue: Map<string, ModelInfo> | null = null;
 
@@ -31,11 +32,14 @@ export async function loadCatalogue(apiKey: string): Promise<Map<string, ModelIn
   if (catalogue) return catalogue;
 
   const next = new Map<string, ModelInfo>();
+  let loaded = false;
   try {
     const res = await fetch(`${OPENROUTER_BASE_URL}/models`, {
       headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(CATALOGUE_TIMEOUT_MS),
     });
     if (res.ok) {
+      loaded = true;
       const body = (await res.json()) as { data?: RawModel[] };
       for (const m of body.data ?? []) {
         const params = m.supported_parameters ?? [];
@@ -51,7 +55,9 @@ export async function loadCatalogue(apiKey: string): Promise<Map<string, ModelIn
     // A catalogue miss is not fatal -- fall back to conservative defaults.
   }
 
-  catalogue = next;
+  // Only memoize a real answer: a failed lookup (a bad key, a timeout) would
+  // otherwise pin conservative defaults for the life of a long-running process.
+  if (loaded) catalogue = next;
   return next;
 }
 
